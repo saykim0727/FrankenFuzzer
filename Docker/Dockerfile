@@ -17,7 +17,7 @@ RUN pip install psutil
 
 RUN apt-get install -y cron
 
-ADD ./FUZZ /FUZZ
+ADD ./FUZZ /FUZZ/
 
 RUN ulimit -c unlimited
 CMD echo "/FUZZ/share/core/core.%e.%p.%s" > /proc/sys/kernel/core_pattern 
