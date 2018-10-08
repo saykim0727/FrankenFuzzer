@@ -3,6 +3,8 @@ NAME="ffuzz"
 sudo docker rm $NAME
 sudo docker kill $NAME
 
+cp -r ../Fuzz ./FUZZ
+
 sudo docker build --tag $NAME:1.0 ./
 
 SHARED="-v `pwd`/share/:/FUZZ/share"
