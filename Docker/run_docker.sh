@@ -4,6 +4,7 @@ sudo docker rm $NAME
 sudo docker kill $NAME
 
 cp -r ../Fuzz ./FUZZ
+cp ../.config ./FUZZ/.config
 
 sudo docker build --tag $NAME:1.0 ./
 
