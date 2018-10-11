@@ -17,4 +17,6 @@ class Fuzzer:
 		os.chdir("../")
 		print self.args.i
 		subprocess.call("./run_docker.sh f-%s" %(fuzz_name),shell=True)		
-			
+
+if __name__ == "__main__":
+	fuzzer = Fuzzer()
