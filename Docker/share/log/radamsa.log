@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "/FUZZ/fuzzer.py", line 68, in <module>
+    fuzzer.runFuzzer()
+  File "/FUZZ/fuzzer.py", line 22, in runFuzzer
+    cmd = "cat %s | %s -o %s" % (self.args.i+file_list[random.randrange(0,len(file_list))], fuzz_path+fuzz_name,"./Seed/input")
+AttributeError: Fuzzer instance has no attribute 'args'

@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM ubuntu:16.04
 MAINTAINER F-fuzz <saykim0727@kaist.ac.kr>
 
 RUN sed -i 's/security.ubuntu.com/ftp.daumkakao.com/g' /etc/apt/sources.list
@@ -16,9 +16,13 @@ RUN apt-get install -y net-tools
 RUN pip install psutil
 
 RUN apt-get install -y cron
+RUN apt-get install libini-config-dev libtool-bin automake bison libglib2.0-dev qemu -y
 
 ADD ./FUZZ /FUZZ/
-ADD ./init.sh /init.sh
-RUN chmod 777 /init.sh
+ADD ./start.sh /FUZZ/start.sh
+CMD chmod 755 /FUZZ/start.sh
 RUN ulimit -c unlimited
-CMD echo "/FUZZ/share/core/core.%e.%p.%s" > /proc/sys/kernel/core_pattern 
+CMD echo "core" > /proc/sys/kernel/core_pattern
+ADD ./entry.sh /entry.sh
+CMD chmod 755 /entry.sh
+
