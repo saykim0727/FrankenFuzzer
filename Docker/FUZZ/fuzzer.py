@@ -7,7 +7,7 @@ import argparse
 import sys
 
 class Fuzzer:
-	target = "/FUZZ/share/"
+	target = "/FUZZ/"
 	def __init__(self,argv):	
 		self.fuzz = argv[1]
 		self.dumb = argv[2]
