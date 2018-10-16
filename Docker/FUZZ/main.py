@@ -3,6 +3,7 @@ import os
 import sys
 import argparse
 import time
+import subprocess
 
 class Main:
 	fuzz_list = ["afl-fuzz","radamsa","honggfuzz","hodor"]

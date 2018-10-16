@@ -12,10 +12,14 @@ class Fuzzer:
 		self.fuzz = argv[1]
 		self.dumb = argv[2]
 		self.indir = argv[3]
-		self.outdir = argv[4]
+		self.outdir = argv[4] + "/" + self.fuzz
 		self.target = self.target +  argv[5]
 
-	def runFuzzer(self):	
+	def runFuzzer(self):
+		rm = subprocess.Popen(['rm','-rf','/FUZZ/share/core/*'])	
+		rm.wait()
+		rm = subprocess.Popen(['rm','-f','/FUZZ/share/log/*'])	
+		rm.wait()
 		while True:
 			if self.fuzz=="afl-fuzz":
 				afl = AFL(self.dumb,self.indir,self.outdir,self.target)
