@@ -14,6 +14,7 @@ class Fuzzer:
 		self.indir = argv[3]
 		self.outdir = argv[4] + "/" + self.fuzz
 		self.target = self.target +  argv[5]
+		os.system("mkdir /FUZZ/share/core/%s" % (self.fuzz))
 
 	def runFuzzer(self):
 		rm = subprocess.Popen(['rm','-rf','/FUZZ/share/core/*'])	
@@ -28,7 +29,7 @@ class Fuzzer:
 			elif self.fuzz=="honggfuzz":
 				honggfuzz = HONGGFUZZ(self.indir,self.outdir,self.target)
 			elif self.fuzz=="hodor":
-				pass
+				hodor = HODOR(self.indir,self.outdir,self.target)
 			else:
 				printf("Unknown fuzzer")
 
@@ -59,9 +60,11 @@ class RADAMSA:
 		radamsa_proc = subprocess.call(cmd,shell=True)
 
 class HODOR:
-	def __init__(self,outdir,indir,target):
-		pass
-		
+	def __init__(self,indir,outdir,target):
+		self.run(indir,outdir,target)
+	
+	def run(self,indir,outdir,target):
+		pass	
 
 class HONGGFUZZ:
 	path = "/FUZZ/mod/honggfuzz/honggfuzz"

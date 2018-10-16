@@ -11,11 +11,12 @@ class Main:
 		parser = argparse.ArgumentParser(description='FrankenFuzzer')
 		parser.add_argument('-i', type=str, default="/FUZZ/Seed",help='an integer for the accumulator')
 		parser.add_argument('-o', type=str, default="/FUZZ/share/core",help='an integer for the accumulator')
-		parser.add_argument('-d', type=str, default="False", help='an integer for the accumulator')
+		parser.add_argument('-d', type=str, default="False", help='an integer for the accumulator')#for afl without afl-gcc
 		parser.add_argument('t',type=str,help="aaa")
-		#for honggfuzz, afl
-		#parser.add_argument('-t', type=int, default=10, help='an integer for the accumulator')
-		#for honggfuzz, afl
+		
+
+		#binary or text seed for hodor
+		
 		self.args = parser.parse_args()
 
 	def run(self):
