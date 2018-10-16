@@ -16,16 +16,17 @@ class Fuzzer:
 		self.target = self.target +  argv[5]
 
 	def runFuzzer(self):	
-		if self.fuzz=="afl-fuzz":
-			afl = AFL(self.dumb,self.indir,self.outdir,self.target)
-		elif self.fuzz=="radamsa":
-			cmd = "cat %s | %s -o %s" % (self.args.i+file_list[random.randrange(0,len(file_list))], fuzz_path+fuzz_name,"./Seed/input")
-		elif self.fuzz=="honggfuzz":
-			pass
-		elif self.fuzz=="hodor":
-			pass
-		else:
-			printf("Unknown fuzzer");
+		while True:
+			if self.fuzz=="afl-fuzz":
+				afl = AFL(self.dumb,self.indir,self.outdir,self.target)
+			elif self.fuzz=="radamsa":
+				radamsa = RADAMSA(self.indir,self.outdir,self.target)
+			elif self.fuzz=="honggfuzz":
+				honggfuzz = HONGGFUZZ(self.indir,self.outdir,self.target)
+			elif self.fuzz=="hodor":
+				pass
+			else:
+				printf("Unknown fuzzer")
 
 class AFL:
 	path = "/FUZZ/mod/afl/afl-fuzz"
@@ -38,21 +39,34 @@ class AFL:
 			cmd = "%s -i %s -o %s %s" % (self.path,indir,outdir,target)	
 		else:
 			cmd = "%s -i %s -o %s -Q %s" % (self.path,indir,outdir,target)	
-		print cmd
 		AFL_proc = subprocess.call(cmd,shell=True)
-		AFL_proc.wait()
 
 class RADAMSA:
-	def __init__(self,fuzzer,dumb):	
-		pass
+	path = "/FUZZ/mod/radamsa"
+	def __init__(self,indir,outdir,target):	
+		run(indir,outdir,target)
+	
+	def run(self,indir,outdir,target):
+		file_list = os.listdir(indir)
+		cmd = "cat %s | %s -o %s" % (indi+"/"+file_list[0], self.path,"/FUZZ/mod/radamsa.seed")
+		radamsa_proc = subprocess.call(cmd,shell=True)
+		radamsa.wait()
+		cmd = "%s < %s" %(target, "/FUZZ/mod/radamsa.ssed")
+		radamsa_proc = subprocess.call(cmd,shell=True)
 
-class hodor:
-	def __init__(self,fuzzer,dumb):	
+class HODOR:
+	def __init__(self,outdir,indir,target):
 		pass
+		
 
-class honggfuzz:
-	def __init__(self,fuzzer,dumb):	
-		pass
+class HONGGFUZZ:
+	path = "/FUZZ/mod/honggfuzz/honggfuzz"
+	def __init__(self,indir,outdir,target):	
+		self.run(indir,outdir,target)
+
+	def run(self,indir,outdir,target):
+		cmd = "%s -n1 -u -f %s -W %s -- %s ___FILE___" % (self.path,indir,outdir,target)
+		hong_proc = subprocess.call(cmd,shell=True)	
 		
 class CoreMonitor(): #for radamsa, hodor
 	def __init__(self,fuzzer,dumb):	
