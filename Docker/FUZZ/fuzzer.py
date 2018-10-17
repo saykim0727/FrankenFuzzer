@@ -14,13 +14,13 @@ class Fuzzer:
 		self.indir = argv[3]
 		self.outdir = argv[4] + "/" + self.fuzz
 		self.target = self.target +  argv[5]
-		os.system("mkdir /FUZZ/share/core/%s" % (self.fuzz))
 
 	def runFuzzer(self):
 		rm = subprocess.Popen(['rm','-rf','/FUZZ/share/core/*'])	
 		rm.wait()
 		rm = subprocess.Popen(['rm','-f','/FUZZ/share/log/*'])	
 		rm.wait()
+		os.system("mkdir /FUZZ/share/core/%s" % (self.fuzz))
 		while True:
 			if self.fuzz=="afl-fuzz":
 				afl = AFL(self.dumb,self.indir,self.outdir,self.target)
