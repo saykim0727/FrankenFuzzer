@@ -24,5 +24,5 @@ fi
 
 
 #service cron restart
-/FUZZ/start.sh $1 $2 $3 $4 $5  > /FUZZ/share/log/$1.log 2>&1 &
+/FUZZ/start.sh $1 $2 $3 $4 $5 $6  > /FUZZ/share/log/$1.log 2>&1 &
 /bin/bash 

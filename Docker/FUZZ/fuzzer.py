@@ -13,7 +13,8 @@ class Fuzzer:
 		self.dumb = argv[2]
 		self.indir = argv[3]
 		self.outdir = argv[4] + "/" + self.fuzz
-		self.target = self.target +  argv[5]
+		self.type = argv[5]
+		self.target = self.target +  argv[6]
 
 	def runFuzzer(self):
 		rm = subprocess.Popen(['rm','-rf','/FUZZ/share/core/*'])	
@@ -23,7 +24,7 @@ class Fuzzer:
 		os.system("mkdir /FUZZ/share/core/%s" % (self.fuzz))
 		while True:
 			if self.fuzz=="afl-fuzz":
-				afl = AFL(self.dumb,self.indir,self.outdir,self.target)
+				afl = AFL(self.dumb,self.indir,self.outdir,self.target,self.type)
 			elif self.fuzz=="radamsa":
 				radamsa = RADAMSA(self.indir,self.outdir,self.target)
 			elif self.fuzz=="honggfuzz":
@@ -35,15 +36,17 @@ class Fuzzer:
 
 class AFL:
 	path = "/FUZZ/mod/afl/afl-fuzz"
-	def __init__(self, dumb,indir,outdir,target):	
-		self.run(dumb,indir,outdir,target)
+	def __init__(self, dumb,indir,outdir,target,t):	
+		self.run(dumb,indir,outdir,target,t)
 	
-	def run(self, dumb,indir,outdir,target):	
+	def run(self, dumb,indir,outdir,target,t):	
 		cmd = ""
 		if dumb=="False":
-			cmd = "%s -i %s -o %s %s" % (self.path,indir,outdir,target)	
+			cmd = "%s -i %s -o %s %s" % (self.path,indir,outdir,target)
 		else:
 			cmd = "%s -i %s -o %s -Q %s" % (self.path,indir,outdir,target)	
+		if t=="True": #file
+			cmd = cmd + " @@"
 		AFL_proc = subprocess.call(cmd,shell=True)
 
 class RADAMSA:
