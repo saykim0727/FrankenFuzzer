@@ -12,8 +12,8 @@ class Main:
 		parser.add_argument('-i', type=str, default="/FUZZ/Seed",help='an integer for the accumulator')
 		parser.add_argument('-o', type=str, default="/FUZZ/share/core",help='an integer for the accumulator')
 		parser.add_argument('-d', type=str, default="False", help='an integer for the accumulator')#for afl without afl-gcc
+		parser.add_argument('-f',type=str,default="True",help="input type is file or ")
 		parser.add_argument('t',type=str,help="aaa")
-		
 
 		#binary or text seed for hodor
 		
@@ -21,8 +21,8 @@ class Main:
 
 	def run(self):
 		for i in self.fuzz_list: 
-			if i == "radamsa" or i == "hodor":
-				continue
+		#	if i == "afl-fuzz" or i == "hodor" or i=="honggfuzz":
+		#		continue
 			docker = Docker()
 			docker.runDocker(self.args,i)
 		time.sleep(1) #time for running all fuzzer
@@ -35,7 +35,7 @@ class Docker:
 
 	def runDocker(self,args,fuzzer):
 		os.chdir("../")
-		subprocess.call("./run_docker.sh f-%s %s %s %s %s/%s %s" % (fuzzer, fuzzer,args.d,args.i,args.o,fuzzer,args.t),shell=True)
+		subprocess.call("./run_docker.sh f-%s %s %s %s %s/%s %s %s" % (fuzzer, fuzzer,args.d,args.i,args.o,fuzzer,args.f,args.t),shell=True)
 		os.chdir("./FUZZ")
 
 

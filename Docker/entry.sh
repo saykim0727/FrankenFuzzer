@@ -21,7 +21,12 @@ then
 	make
 	cd /
 fi
-
+if [ $1 = "radamsa" ]
+then
+	mkdir /TEMP
+	echo "/TEMP/core.$1.%e.%p.%s" > /proc/sys/kernel/core_pattern
+fi
+rm -rf /FUZZ/share/core/*
 
 #service cron restart
 /FUZZ/start.sh $1 $2 $3 $4 $5 $6  > /FUZZ/share/log/$1.log 2>&1 &

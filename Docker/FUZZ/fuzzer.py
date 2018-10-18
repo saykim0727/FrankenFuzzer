@@ -17,16 +17,24 @@ class Fuzzer:
 		self.target = self.target +  argv[6]
 
 	def runFuzzer(self):
-		rm = subprocess.Popen(['rm','-rf','/FUZZ/share/core/*'])	
+		rm = subprocess.Popen(['rm','-rf','/FUZZ/share/core/*'],stdin=subprocess.PIPE)	
+		rm.stdin.write('y')
+		rm.stdin.flush()
 		rm.wait()
-		rm = subprocess.Popen(['rm','-f','/FUZZ/share/log/*'])	
+		rm = subprocess.Popen(['rm','-f','/FUZZ/share/core/*'],stdin=subprocess.PIPE)
+		rm.stdin.write('y')
+		rm.stdin.flush()
+		rm.wait()
+		rm = subprocess.Popen(['rm','-f','/FUZZ/share/log/*'],stdin=subprocess.PIPE)	
+		rm.stdin.write('y')
+		rm.stdin.flush()
 		rm.wait()
 		os.system("mkdir /FUZZ/share/core/%s" % (self.fuzz))
 		while True:
 			if self.fuzz=="afl-fuzz":
 				afl = AFL(self.dumb,self.indir,self.outdir,self.target,self.type)
 			elif self.fuzz=="radamsa":
-				radamsa = RADAMSA(self.indir,self.outdir,self.target)
+				radamsa = RADAMSA(self.indir,self.outdir,self.target,self.fuzz)
 			elif self.fuzz=="honggfuzz":
 				honggfuzz = HONGGFUZZ(self.indir,self.outdir,self.target)
 			elif self.fuzz=="hodor":
@@ -51,16 +59,20 @@ class AFL:
 
 class RADAMSA:
 	path = "/FUZZ/mod/radamsa"
-	def __init__(self,indir,outdir,target):	
-		run(indir,outdir,target)
+	def __init__(self,indir,outdir,target,radamsa):	
+		self.run(indir,outdir,target,radamsa)
 	
-	def run(self,indir,outdir,target):
+	def run(self,indir,outdir,target,radamsa):
 		file_list = os.listdir(indir)
-		cmd = "cat %s | %s -o %s" % (indi+"/"+file_list[0], self.path,"/FUZZ/mod/radamsa.seed")
-		radamsa_proc = subprocess.call(cmd,shell=True)
-		radamsa.wait()
-		cmd = "%s < %s" %(target, "/FUZZ/mod/radamsa.ssed")
-		radamsa_proc = subprocess.call(cmd,shell=True)
+		seed_name = "radamsa." + str(time.time())
+		cmd = "cat %s | %s -o %s" % (indir+"/"+file_list[0], self.path,"/FUZZ/mod/"+seed_name)
+		radamsa_proc = subprocess.Popen(cmd,shell=True)
+		radamsa_proc.wait()
+		cmd = "%s < %s" %(target, "/FUZZ/mod/"+seed_name)
+		radamsa_proc = subprocess.Popen(cmd,shell=True)
+		radamsa_proc.wait()
+		monitor = CoreMonitor(seed_name,radamsa)	
+		
 
 class HODOR:
 	def __init__(self,indir,outdir,target):
@@ -79,9 +91,13 @@ class HONGGFUZZ:
 		hong_proc = subprocess.call(cmd,shell=True)	
 		
 class CoreMonitor(): #for radamsa, hodor
-	def __init__(self,fuzzer,dumb):	
-		pass
-
+	def __init__(self,seed,fuzzer):	
+		import shutil
+		from shutil import move
+		if fuzzer == "radamsa":
+			for filename in os.listdir("/TEMP"):
+				move("/TEMP/%s" % (filename),"/FUZZ/share/core_file/%s" %(filename)) 
+				shutil.copyfile("/FUZZ/mod/"+seed,"/FUZZ/share/core/radamsa/"+seed)
 
 if  __name__== "__main__":
 	argv=[]
