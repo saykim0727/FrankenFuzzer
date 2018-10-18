@@ -21,8 +21,8 @@ class Main:
 
 	def run(self):
 		for i in self.fuzz_list: 
-			if i == "afl-fuzz" or i == "hodor" or i=="honggfuzz":
-				continue
+#			if i == "afl-fuzz" or i == "hodor" or i=="honggfuzz":
+#				continue
 			docker = Docker()
 			docker.runDocker(self.args,i)
 		time.sleep(1) #time for running all fuzzer
