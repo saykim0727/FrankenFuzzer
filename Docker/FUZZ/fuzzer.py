@@ -17,34 +17,26 @@ class Fuzzer:
 		self.target = self.target +  argv[6]
 
 	def runFuzzer(self):
-		rm = subprocess.Popen(['rm','-rf','/FUZZ/share/core/*'],stdin=subprocess.PIPE)	
-		rm.stdin.write('y')
-		rm.stdin.flush()
-		rm.wait()
-		rm = subprocess.Popen(['rm','-f','/FUZZ/share/core/*'],stdin=subprocess.PIPE)
-		rm.stdin.write('y')
-		rm.stdin.flush()
-		rm.wait()
-		rm = subprocess.Popen(['rm','-f','/FUZZ/share/log/*'],stdin=subprocess.PIPE)	
-		rm.stdin.write('y')
-		rm.stdin.flush()
-		rm.wait()
 		os.system("mkdir /FUZZ/share/core/%s" % (self.fuzz))
 		while True:
 			if self.fuzz=="afl-fuzz":
 				afl = AFL(self.dumb,self.indir,self.outdir,self.target,self.type)
 			elif self.fuzz=="radamsa":
-				radamsa = RADAMSA(self.indir,self.outdir,self.target,self.fuzz)
+				radamsa = RADAMSA(self.indir,self.outdir,self.target,self.fuzz,self.type)
 			elif self.fuzz=="honggfuzz":
-				honggfuzz = HONGGFUZZ(self.indir,self.outdir,self.target)
-			elif self.fuzz=="hodor":
-				hodor = HODOR(self.indir,self.outdir,self.target)
+				honggfuzz = HONGGFUZZ(self.indir,self.outdir,self.target,self.type)
 			else:
 				printf("Unknown fuzzer")
 
 class AFL:
 	path = "/FUZZ/mod/afl/afl-fuzz"
+	gcc_path = "/FUZZ/mod/afl/afl-gcc"
 	def __init__(self, dumb,indir,outdir,target,t):	
+		'''
+		if dumb=="False":
+			cmd = "%s -fno-stack-protector -o %s %s" %(self.gcc_path,target,target+".c")
+			afl_gcc = subprocess(cmd,shell=True)
+		'''
 		self.run(dumb,indir,outdir,target,t)
 	
 	def run(self, dumb,indir,outdir,target,t):	
@@ -54,41 +46,46 @@ class AFL:
 		else:
 			cmd = "%s -i %s -o %s -Q %s" % (self.path,indir,outdir,target)	
 		if t=="True": #file
-			cmd = cmd + " @@"
+			cmd = cmd + " @@"
 		AFL_proc = subprocess.call(cmd,shell=True)
+		AFL_proc.wait()
+
+	# for afl-gcc with source code
+	def compile(self):
+		pass
 
 class RADAMSA:
 	path = "/FUZZ/mod/radamsa"
-	def __init__(self,indir,outdir,target,radamsa):	
-		self.run(indir,outdir,target,radamsa)
+	def __init__(self,indir,outdir,target,radamsa,_type):	
+		self.run(indir,outdir,target,radamsa,_type)
 	
-	def run(self,indir,outdir,target,radamsa):
+	def run(self,indir,outdir,target,radamsa,_type):
 		file_list = os.listdir(indir)
 		seed_name = "radamsa." + str(time.time())
 		cmd = "cat %s | %s -o %s" % (indir+"/"+file_list[0], self.path,"/FUZZ/mod/"+seed_name)
 		radamsa_proc = subprocess.Popen(cmd,shell=True)
 		radamsa_proc.wait()
-		cmd = "%s < %s" %(target, "/FUZZ/mod/"+seed_name)
+		if _type=="False":
+			cmd = "%s < %s" %(target, "/FUZZ/mod/"+seed_name)
+		else:
+			cmd = "%s %s" %(target, "/FUZZ/mod/"+seed_name)
 		radamsa_proc = subprocess.Popen(cmd,shell=True)
 		radamsa_proc.wait()
 		monitor = CoreMonitor(seed_name,radamsa)	
 		
-
-class HODOR:
-	def __init__(self,indir,outdir,target):
-		self.run(indir,outdir,target)
-	
-	def run(self,indir,outdir,target):
-		pass	
-
 class HONGGFUZZ:
 	path = "/FUZZ/mod/honggfuzz/honggfuzz"
-	def __init__(self,indir,outdir,target):	
-		self.run(indir,outdir,target)
+	def __init__(self,indir,outdir,target,_type):	
+		self.run(indir,outdir,target,_type)
 
-	def run(self,indir,outdir,target):
-		cmd = "%s -n1 -u -f %s -W %s -- %s ___FILE___" % (self.path,indir,outdir,target)
+	def run(self,indir,outdir,target,_type):
+		cmd=""
+		if _type=="False":
+			cmd = "%s -n1 -u -f %s -W %s -s -- %s" % (self.path,indir,outdir,target)
+		else:
+			cmd = "%s -n1 -u -f %s -W %s -- %s ___FILE___" % (self.path,indir,outdir,target)
 		hong_proc = subprocess.call(cmd,shell=True)	
+#		os.system("rm /FUZZ/share/seed/00000000000000000000000000000000.00000001.honggfuzz.cov")
 		
 class CoreMonitor(): #for radamsa, hodor
 	def __init__(self,seed,fuzzer):	

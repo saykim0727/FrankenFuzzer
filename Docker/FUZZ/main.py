@@ -6,7 +6,7 @@ import time
 import subprocess
 
 class Main:
-	fuzz_list = ["afl-fuzz","radamsa","honggfuzz","hodor"]
+	fuzz_list = ["afl-fuzz","radamsa","honggfuzz"]
 	def __init__(self):
 		parser = argparse.ArgumentParser(description='FrankenFuzzer')
 		parser.add_argument('-i', type=str, default="/FUZZ/share/seed",help='an integer for the accumulator')
@@ -16,12 +16,11 @@ class Main:
 		parser.add_argument('t',type=str,help="aaa")
 
 		#binary or text seed for hodor
-		
 		self.args = parser.parse_args()
 
 	def run(self):
 		for i in self.fuzz_list: 
-#			if i == "afl-fuzz" or i == "hodor" or i=="honggfuzz":
+#			if i == "honggfuzz" or i == "hodor" or i=="radamsa":
 #				continue
 			docker = Docker()
 			docker.runDocker(self.args,i)
@@ -48,6 +47,11 @@ class Monitor:
 			
 
 if __name__ == "__main__":
+	os.system("rm -rf ../share/core")
+	os.system("mkdir ../share/core")
+	os.system("rm -rf ../share/core_file")
+	os.system("mkdir ../share/core_file")
+	os.system("rm -f ../share/log/*")
 	main = Main()
 	main.run()
 	
