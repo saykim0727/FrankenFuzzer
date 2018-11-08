@@ -1,53 +1,41 @@
-import pwn import process
+from pwn import process
 import glob
 import sys
 import os
 
-CHAR_LENGTH = 100
-
-if len(sys.argv) < 3 or os.getuid() !=0 :
-    print "[!] USAGE : python ./dna.py [ crash dir path ] [gdb or gdb-peda]"
+if len(sys.argv) < 3 :
+    print("[!] USAGE : python ./dedup.py [target] [crash dir path]")
     sys.exit()
 
-coreDump = "" 
-seedDir = ""
-dirList = glob.glob("%s%s"%(sys.argv[1], "/*"))
-debugger = sys.argv[2]
-if debugger == "gdb":
-    debugger = "(gdb)"
+crashList = []
+dirList = glob.glob("%s%s"%(sys.argv[2], "/*"))
+target = sys.argv[1]
 
 for fileName in dirList :
-    if fileName.find("core") > 0 :
+    if fileName.find("core") > 0 and fileName.find(target) > 0:
         coreDump = fileName
-    else:
-        seedDir  = fileName
 
-#print "[!] coreDump = %s " %(coreDump)
-#print "[!] seeDir = %s " %(seedDir)
+        gdbCmd = ["sudo","gdb", "-q", "-e", target, "-c", coreDump]
+        p = process(gdbCmd)
+        p.recvuntil("\n(gdb) ")
+        p.sendline("bt")
+        callStack = ""
+        while(1):
+            callStack += p.recv(10000)
+            if callStack.find("\n(gdb)") >= 1 :
+                break
+            p.sendline("\r\n")
+        p.kill()
 
-crashType   = coreDump.split(".")[-1]
-crashFile   = "../EOS/" + str(coreDump.split(".")[-3])
-gdbCmd = ["gdb","-q",crashFile,"-c",coreDump]
-print " ".join(gdbCmd)
-p = process(gdbCmd,level='critical')
+        callStackList = callStack.split("#")[1:]
+        line0 = callStackList[0]
+        nbOfLines = len(callStackList)
 
-p.recvuntil(debugger)
-p.sendline("bt")
-callStack =""
-while 1:
-    callStack += p.recv(1000000)
-    if(callStack.find("main()") >=0 or callStack.find(debugger)>=0):
-        break;
-    p.sendline("\r\n")
-
-callStack += p.recvuntil(debugger)
-callStackList = callStack.split("#")
-for data in callStackList:
-    strData = (data[0:CHAR_LENGTH]+"...." + data[-CHAR_LENGTH:-1]).split("\n")[0]
-    print strData
-
-
-
-print "[!] crashType = %s " %(crashType)
-print "[!] crashFile = %s " %(crashFile)
-
+        newCrash = True
+        for crash in crashList:
+            if crash[1] == line0 and crash[2] == nbOfLines:
+                os.remove(coreDump)
+                newCrash = False
+                break
+        if newCrash:
+            crashList.append([coreDump, line0, nbOfLines])
