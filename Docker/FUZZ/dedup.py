@@ -12,7 +12,7 @@ dirList = glob.glob("%s%s"%(sys.argv[2], "/*"))
 target = sys.argv[1]
 
 for fileName in dirList :
-    if fileName.find("core") > 0 and fileName.find(target) > 0:
+    if fileName.find("core") > 0:
         coreDump = fileName
 
         gdbCmd = ["sudo","gdb", "-q", "-e", target, "-c", coreDump]
@@ -30,7 +30,7 @@ for fileName in dirList :
         callStackList = callStack.split("#")[1:]
         line0 = callStackList[0]
         nbOfLines = len(callStackList)
-
+        print(line0)
         newCrash = True
         for crash in crashList:
             if crash[1] == line0 and crash[2] == nbOfLines:
