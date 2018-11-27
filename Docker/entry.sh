@@ -1,15 +1,11 @@
 #!/bin/sh
 rm /FUZZ/share/core_file/*
+echo "/FUZZ/share/core_file/core.$1.%e.%p.%s" > /proc/sys/kernel/core_pattern
 if [ $1 = "afl-fuzz" ]
 then
-	rm -rf /FUZZ/share/core_file/$1
-	mkdir /FUZZ/share/core_file/$1
-	echo "core" > /proc/sys/kernel/core_pattern
 	cd /FUZZ/mod/afl/qemu_mode
 	./build_qemu_support.sh
 	cd /
-else
-	echo "/FUZZ/share/core_file/core.$1.%e.%p.%s" > /proc/sys/kernel/core_pattern
 fi
 
 if [ $1 = "honggfuzz" ]

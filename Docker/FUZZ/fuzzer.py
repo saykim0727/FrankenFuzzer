@@ -47,8 +47,10 @@ class AFL:
 			cmd = "%s -i %s -o %s -Q %s" % (self.path,indir,outdir,target)	
 		if t=="True": #file
 			cmd = cmd + " @@"
-		AFL_proc = subprocess.call(cmd,shell=True)
+		AFL_proc = subprocess.Popen(cmd,shell=True)
+		# run monitor module to run a target with afl_result for core dump
 		AFL_proc.wait()
+		# if afl is terminated, remove seed because the seed cause crash
 
 	# for afl-gcc with source code
 	def compile(self):
@@ -84,7 +86,8 @@ class HONGGFUZZ:
 			cmd = "%s -n1 -u -f %s -W %s -s -- %s" % (self.path,indir,outdir,target)
 		else:
 			cmd = "%s -n1 -u -f %s -W %s -- %s ___FILE___" % (self.path,indir,outdir,target)
-		hong_proc = subprocess.call(cmd,shell=True)	
+		hong_proc = subprocess.Popen(cmd,shell=True)	
+		hong_proc.wait()
 #		os.system("rm /FUZZ/share/seed/00000000000000000000000000000000.00000001.honggfuzz.cov")
 		
 class CoreMonitor(): #for radamsa, hodor

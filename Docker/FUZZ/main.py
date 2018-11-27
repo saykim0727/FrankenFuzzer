@@ -25,7 +25,9 @@ class Main:
 			docker = Docker()
 			docker.runDocker(self.args,i)
 		time.sleep(1) #time for running all fuzzer
-
+		#deduplication module is here
+		#Also the module has function that execute target with afl testcase to get a coredump
+		#and remove all dup
 		
 class Docker:
 
@@ -54,4 +56,3 @@ if __name__ == "__main__":
 	os.system("rm -f ../share/log/*")
 	main = Main()
 	main.run()
-	
