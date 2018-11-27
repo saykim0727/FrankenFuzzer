@@ -62,6 +62,7 @@ class RADAMSA:
         self.run(indir,outdir,target,radamsa,_type)
     
     def run(self,indir,outdir,target,radamsa,_type):
+        os.system("echo \"/TEMP/core.\$1.%e.%p.%s\" > /proc/sys/kernel/core_pattern")
         file_list = os.listdir(indir)
         seed_name = "radamsa." + str(time.time())
         cmd = "cat %s | %s -o %s" % (indir+"/"+file_list[0], self.path,"/FUZZ/mod/"+seed_name)
@@ -87,8 +88,8 @@ class HONGGFUZZ:
         else:
             cmd = "%s -n1 -u -f %s -W %s -- %s ___FILE___" % (self.path,indir,outdir,target)
         hong_proc = subprocess.Popen(cmd,shell=True)    
+        os.system("rm /FUZZ/share/seed/00000000000000000000000000000000.00000001.honggfuzz.cov")
         hong_proc.wait()
-#        os.system("rm /FUZZ/share/seed/00000000000000000000000000000000.00000001.honggfuzz.cov")
         
 class CoreMonitor(): #for radamsa, hodor
     def __init__(self,seed,fuzzer):    
