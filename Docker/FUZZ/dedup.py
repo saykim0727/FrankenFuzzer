@@ -14,15 +14,15 @@ target = sys.argv[1]
 for fileName in dirList :
     if fileName.find("core") > 0:
         coreDump = fileName
-
-        gdbCmd = ["sudo","gdb", "-q", "-e", target, "-c", coreDump]
+        print target,coreDump
+        gdbCmd = ["gdb", "-q", "-e", target, "-c", coreDump]
         p = process(gdbCmd)
-        p.recvuntil("\n(gdb) ")
+        p.recvuntil("(gdb)")
         p.sendline("bt")
         callStack = ""
         while(1):
             callStack += p.recv(10000)
-            if callStack.find("\n(gdb)") >= 1 :
+            if callStack.find("(gdb)") >= 1 :
                 break
             p.sendline("\r\n")
         p.kill()
