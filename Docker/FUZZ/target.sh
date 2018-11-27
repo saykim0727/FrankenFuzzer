@@ -1,5 +1,5 @@
 #!/bin/bash
-RANDOM=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | sed 1q)
+RANDOM=$(python -c 'import uuid; print uuid.uuid4()')
 target="/FUZZ/afl_test_t_false"
 FILENAME="/FUZZ/pin/result"
 COUNT=0
@@ -21,12 +21,12 @@ cat /FUZZ/pin/result | \
 while read line
 do
     if [ $COUNT -eq 0 ]; then
-        if [ $line -gt $INS_COUNT ]; then
+        if [ $line -gt $INS_COUNT ] && [ $INS_COUNT -ne 0 ]; then
             echo $@ > /FUZZ/share/seed/$RANDOM
         fi
         COUNT=1
     else
-        if [ $line -gt $BB_COUNT ]; then
+        if [ $line -gt $BB_COUNT ] && [ $BB_COUNT -ne 0 ]; then
             echo $@ > /FUZZ/share/seed/$RANDOM
         fi
         COUNT=0
