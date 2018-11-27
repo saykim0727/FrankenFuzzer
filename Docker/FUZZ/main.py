@@ -21,15 +21,18 @@ class Main:
 
     def run(self):
         for i in self.fuzz_list: 
-#            if i == "honggfuzz" or i == "hodor" or i=="radamsa":
-#                continue
+            if i == "honggfuzz" or i == "hodor" or i=="afl-fuzz":
+                continue
             docker = Docker()
             docker.runDocker(self.args,i)
         time.sleep(1) #time for running all fuzzer
 
-        while (True):
-            subprocess.call("python dedup.py %s %s") % (self.args.crash, self.args.t)
-            time.sleep(5)
+    #    while (True):
+            
+    #        print self.args.crash, self.args.t
+    #        os.system("python dedup.py %s %s") % (self.args.t,self.args.crash)
+    #        time.sleep(5)
+
         #deduplication module is here
         #Also the module has function that execute target with afl testcase to get a coredump
         #and remove all dup

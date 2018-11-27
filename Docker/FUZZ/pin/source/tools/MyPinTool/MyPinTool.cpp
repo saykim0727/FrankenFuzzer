@@ -109,8 +109,8 @@ VOID Fini(INT32 code, VOID *v)
 {
     //*out <<  "===============================================" << endl;
     //*out <<  "MyPinTool analysis results: " << endl;
-    *out <<  "instructions:" << insCount  << endl;
-    *out <<  "basic block:" << bblCount  << endl;
+    *out <<   insCount  << endl;
+    *out <<   bblCount  << endl;
     //*out <<  "threads: " << threadCount  << endl;
     //*out <<  "===============================================" << endl;
 }
