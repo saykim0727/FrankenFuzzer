@@ -62,7 +62,7 @@ class RADAMSA:
         self.run(indir,outdir,target,radamsa,_type)
     
     def run(self,indir,outdir,target,radamsa,_type):
-        os.system("echo \"/TEMP/core.\$1.%e.%p.%s\" > /proc/sys/kernel/core_pattern")
+        os.system("echo /TEMP/core.radamsa.%e.%p.%s > /proc/sys/kernel/core_pattern")
         file_list = os.listdir(indir)
         seed_name = "radamsa." + str(time.time())
         cmd = "cat %s | %s -o %s" % (indir+"/"+file_list[0], self.path,"/FUZZ/mod/"+seed_name)
@@ -99,6 +99,7 @@ class CoreMonitor(): #for radamsa, hodor
             for filename in os.listdir("/TEMP"):
                 move("/TEMP/%s" % (filename),"/FUZZ/share/core_file/%s" %(filename)) 
                 shutil.copyfile("/FUZZ/mod/"+seed,"/FUZZ/share/core/radamsa/"+seed)
+                shutil.copyfile("/FUZZ/mod/"+seed,"/FUZZ/share/seed/"+seed)
 
 if  __name__== "__main__":
     argv=[]
