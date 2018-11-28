@@ -2,9 +2,23 @@
 RANDOM=$(python -c 'import uuid; print uuid.uuid4()')
 target="/FUZZ/afl_test_t_false"
 FILENAME="/FUZZ/pin/result"
+FUZZFILE="/tmp/fuzzer"
+CASE="/tmp/testcase"
 COUNT=0
 INS_COUNT=0
 BB_COUNT=0
+FUZZ="None"
+IFS=""
+while read
+do
+    echo -e $REPLY >> $CASE
+done
+cat $FUZZFILE | \
+while read line
+do
+    FUZZ=$line
+done
+/usr/bin/python /FUZZ/monitor.py $FUZZ $CASE
 cat $FILENAME | \
 while read line      
 do
@@ -16,7 +30,7 @@ do
         COUNT=0
     fi
 done
-/FUZZ/pin/pin -t /FUZZ/pin/MyPinTool.so -o /FUZZ/pin/result -- $target $@
+/FUZZ/pin/pin -t /FUZZ/pin/MyPinTool.so -o /FUZZ/pin/result -- $target < $CASE
 cat /FUZZ/pin/result | \
 while read line
 do
@@ -32,5 +46,5 @@ do
         COUNT=0
     fi
 done
-$target $@
-
+$target < $CASE
+rm $CASE

@@ -1,4 +1,5 @@
 import subprocess
+from monitor import *
 from configParsor import ConfigParsor 
 import os
 import time
@@ -74,7 +75,6 @@ class RADAMSA:
             cmd = "%s %s" %(target, "/FUZZ/mod/"+seed_name)
         radamsa_proc = subprocess.Popen(cmd,shell=True)
         radamsa_proc.wait()
-        monitor = CoreMonitor(seed_name,radamsa)    
         
 class HONGGFUZZ:
     path = "/FUZZ/mod/honggfuzz/honggfuzz"
@@ -90,16 +90,6 @@ class HONGGFUZZ:
         hong_proc = subprocess.Popen(cmd,shell=True)    
         os.system("rm /FUZZ/share/seed/00000000000000000000000000000000.00000001.honggfuzz.cov")
         hong_proc.wait()
-        
-class CoreMonitor(): #for radamsa, hodor
-    def __init__(self,seed,fuzzer):    
-        import shutil
-        from shutil import move
-        if fuzzer == "radamsa":
-            for filename in os.listdir("/TEMP"):
-                move("/TEMP/%s" % (filename),"/FUZZ/share/core_file/%s" %(filename)) 
-                shutil.copyfile("/FUZZ/mod/"+seed,"/FUZZ/share/core/radamsa/"+seed)
-                shutil.copyfile("/FUZZ/mod/"+seed,"/FUZZ/share/seed/"+seed)
 
 if  __name__== "__main__":
     argv=[]
