@@ -18,11 +18,3 @@ RUN pip install psutil
 RUN apt-get install -y cron
 RUN apt-get install libini-config-dev libtool-bin automake bison libglib2.0-dev qemu -y
 RUN apt-get install -y binutils-dev libunwind-dev
-
-ADD ./FUZZ /FUZZ/
-ADD ./start.sh /FUZZ/start.sh
-CMD chmod 755 /FUZZ/start.sh
-RUN ulimit -c unlimited
-ADD ./entry.sh /entry.sh
-CMD chmod 755 /entry.sh
-
