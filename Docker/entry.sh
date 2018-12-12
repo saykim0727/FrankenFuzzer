@@ -1,4 +1,7 @@
 #!/bin/sh
+apt-get update
+apt-get install netpbm -y
+echo "0" > /proc/sys/kernel/randomize_va_space
 mkdir /TEMP
 echo $1 > /tmp/fuzzer
 echo "/TEMP/core.$1.%e.%p.%s" > /proc/sys/kernel/core_pattern

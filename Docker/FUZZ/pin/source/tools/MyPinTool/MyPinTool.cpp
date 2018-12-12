@@ -1,161 +1,247 @@
+/*BEGIN_LEGAL 
+Intel Open Source License 
 
+Copyright (c) 2002-2018 Intel Corporation. All rights reserved.
+ 
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+
+Redistributions of source code must retain the above copyright notice,
+this list of conditions and the following disclaimer.  Redistributions
+in binary form must reproduce the above copyright notice, this list of
+conditions and the following disclaimer in the documentation and/or
+other materials provided with the distribution.  Neither the name of
+the Intel Corporation nor the names of its contributors may be used to
+endorse or promote products derived from this software without
+specific prior written permission.
+ 
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE INTEL OR
+ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+END_LEGAL */
 /*! @file
- *  This is an example of the PIN tool that demonstrates some basic PIN APIs 
- *  and could serve as the starting point for developing your first PIN tool
+ *  This file contains an ISA-portable PIN tool for tracing instructions
  */
 
 #include "pin.H"
 #include <iostream>
+#include <string.h>
 #include <fstream>
-
-/* ================================================================== */
-// Global variables 
-/* ================================================================== */
-
-UINT64 insCount = 0;        //number of dynamically executed instructions
-UINT64 bblCount = 0;        //number of dynamically executed basic blocks
-UINT64 threadCount = 0;     //total number of threads, including main thread
-
-std::ostream * out = &cerr;
+#include <stdio.h>
+#include <string>
 
 /* ===================================================================== */
-// Command line switches
-/* ===================================================================== */
-KNOB<string> KnobOutputFile(KNOB_MODE_WRITEONCE,  "pintool",
-    "o", "", "specify file name for MyPinTool output");
-
-KNOB<BOOL>   KnobCount(KNOB_MODE_WRITEONCE,  "pintool",
-    "count", "1", "count instructions, basic blocks and threads in the application");
-
-
-/* ===================================================================== */
-// Utilities
+/* Global Variables */
 /* ===================================================================== */
 
-/*!
- *  Print out help message.
- */
+std::ofstream TraceFile;
+int flag = 0; 
+/* ===================================================================== */
+/* Commandline Switches */
+/* ===================================================================== */
+
+KNOB<string> KnobOutputFile(KNOB_MODE_WRITEONCE, "pintool", "o", "BB.out", "specify trace file name");
+KNOB<BOOL>   KnobPrintArgs(KNOB_MODE_WRITEONCE, "pintool", "a", "0", "print call arguments ");
+//KNOB<BOOL>   KnobPrintArgs(KNOB_MODE_WRITEONCE, "pintool", "i", "0", "mark indirect calls ");
+
+/* ===================================================================== */
+/* Print Help Message                                                    */
+/* ===================================================================== */
+
 INT32 Usage()
 {
-    cerr << "This tool prints out the number of dynamically executed " << endl <<
-            "instructions, basic blocks and threads in the application." << endl << endl;
-
+    cerr << "This tool produces a call trace." << endl << endl;
     cerr << KNOB_BASE::StringKnobSummary() << endl;
-
     return -1;
 }
 
-/* ===================================================================== */
-// Analysis routines
-/* ===================================================================== */
+string invalid = "invalid_rtn";
 
-/*!
- * Increase counter of the executed basic blocks and instructions.
- * This function is called for every basic block when it is about to be executed.
- * @param[in]   numInstInBbl    number of instructions in the basic block
- * @note use atomic operations for multi-threaded applications
- */
-VOID CountBbl(UINT32 numInstInBbl)
+/* ===================================================================== */
+const string *Target2String(ADDRINT target)
 {
-    bblCount++;
-    insCount += numInstInBbl;
+    string name = RTN_FindNameByAddress(target);
+    if (name == "")
+        return &invalid;
+    else
+        return new string(name);
 }
 
 /* ===================================================================== */
-// Instrumentation callbacks
+
+VOID  do_call_args(const string *s, ADDRINT arg0)
+{
+    string temp = "main";
+    string temp1 = "__libc_start_main@plt";
+    if ((*s).compare(temp) == 0 or (*s).compare(temp1)==0)    
+        flag = 1;
+    if (flag == 11)
+        TraceFile << *s << "(" << arg0 << ",...)" << endl;
+}
+
 /* ===================================================================== */
 
-/*!
- * Insert call to the CountBbl() analysis routine before every basic block 
- * of the trace.
- * This function is called every time a new trace is encountered.
- * @param[in]   trace    trace to be instrumented
- * @param[in]   v        value specified by the tool in the TRACE_AddInstrumentFunction
- *                       function call
- */
+VOID  do_call_args_indirect(ADDRINT target, BOOL taken, ADDRINT arg0)
+{
+    if( !taken ) return;
+    
+    const string *s = Target2String(target);
+    do_call_args(s, arg0);
+
+    if (s != &invalid)
+        delete s;
+}
+
+/* ===================================================================== */
+
+VOID  do_call(const string *s)
+{
+    string temp = "main";
+    string temp1 = "__libc_start_main@plt";
+    if ((*s).compare(temp) == 0 or (*s).compare(temp1)==0)    
+        flag = 1;
+    if (flag == 11)
+        TraceFile << *s << endl;
+}
+
+/* ===================================================================== */
+
+VOID  do_call_indirect(ADDRINT target, BOOL taken)
+{
+    if( !taken ) return;
+
+    const string *s = Target2String(target);
+    
+    do_call( s );
+    
+    if (s != &invalid)
+        delete s;
+}
+
+/* ===================================================================== */
+VOID CountBbl(UINT32 numInstInBbl,VOID *ip)
+{
+    if (flag == 1)
+        TraceFile << ip << endl;
+}
 VOID Trace(TRACE trace, VOID *v)
 {
-    // Visit every basic block in the trace
+    const BOOL print_args = KnobPrintArgs.Value();
+    
+        
     for (BBL bbl = TRACE_BblHead(trace); BBL_Valid(bbl); bbl = BBL_Next(bbl))
     {
-        // Insert a call to CountBbl() before every basic bloc, passing the number of instructions
-        BBL_InsertCall(bbl, IPOINT_BEFORE, (AFUNPTR)CountBbl, IARG_UINT32, BBL_NumIns(bbl), IARG_END);
+        INS tail = BBL_InsTail(bbl);
+        BBL_InsertCall(bbl, IPOINT_BEFORE, (AFUNPTR)CountBbl, IARG_UINT32, BBL_NumIns(bbl), IARG_INST_PTR, IARG_END);
+
+        if( INS_IsCall(tail) )
+        {
+            if( INS_IsDirectBranchOrCall(tail) )
+            {
+                const ADDRINT target = INS_DirectBranchOrCallTargetAddress(tail);
+                if( print_args )
+                {
+                    INS_InsertPredicatedCall(tail, IPOINT_BEFORE, AFUNPTR(do_call_args),
+                                             IARG_PTR, Target2String(target), IARG_FUNCARG_CALLSITE_VALUE, 0, IARG_END);
+                }
+                else
+                {
+                    INS_InsertPredicatedCall(tail, IPOINT_BEFORE, AFUNPTR(do_call),
+                                             IARG_PTR, Target2String(target), IARG_END);
+                }
+                
+            }
+            else
+            {
+                if( print_args )
+                {
+                    INS_InsertCall(tail, IPOINT_BEFORE, AFUNPTR(do_call_args_indirect),
+                                   IARG_BRANCH_TARGET_ADDR, IARG_BRANCH_TAKEN,  IARG_FUNCARG_CALLSITE_VALUE, 0, IARG_END);
+                }
+                else
+                {
+                    INS_InsertCall(tail, IPOINT_BEFORE, AFUNPTR(do_call_indirect),
+                                   IARG_BRANCH_TARGET_ADDR, IARG_BRANCH_TAKEN, IARG_END);
+                }
+                
+                
+            }
+        }
+        else
+        {
+            // sometimes code is not in an image
+            RTN rtn = TRACE_Rtn(trace);
+            
+            // also track stup jumps into share libraries
+            if( RTN_Valid(rtn) && !INS_IsDirectBranchOrCall(tail) && ".plt" == SEC_Name( RTN_Sec( rtn ) ))
+            {
+                if( print_args )
+                {
+                    INS_InsertCall(tail, IPOINT_BEFORE, AFUNPTR(do_call_args_indirect),
+                                   IARG_BRANCH_TARGET_ADDR, IARG_BRANCH_TAKEN,  IARG_FUNCARG_CALLSITE_VALUE, 0, IARG_END);
+                }
+                else
+                {
+                    INS_InsertCall(tail, IPOINT_BEFORE, AFUNPTR(do_call_indirect),
+                                   IARG_BRANCH_TARGET_ADDR, IARG_BRANCH_TAKEN, IARG_END);
+
+                }
+            }
+        }
+        
     }
 }
 
-/*!
- * Increase counter of threads in the application.
- * This function is called for every thread created by the application when it is
- * about to start running (including the root thread).
- * @param[in]   threadIndex     ID assigned by PIN to the new thread
- * @param[in]   ctxt            initial register state for the new thread
- * @param[in]   flags           thread creation flags (OS specific)
- * @param[in]   v               value specified by the tool in the 
- *                              PIN_AddThreadStartFunction function call
- */
-VOID ThreadStart(THREADID threadIndex, CONTEXT *ctxt, INT32 flags, VOID *v)
-{
-    threadCount++;
-}
+/* ===================================================================== */
 
-/*!
- * Print out analysis results.
- * This function is called when the application exits.
- * @param[in]   code            exit code of the application
- * @param[in]   v               value specified by the tool in the 
- *                              PIN_AddFiniFunction function call
- */
 VOID Fini(INT32 code, VOID *v)
 {
-    //*out <<  "===============================================" << endl;
-    //*out <<  "MyPinTool analysis results: " << endl;
-    *out <<   insCount  << endl;
-    *out <<   bblCount  << endl;
-    //*out <<  "threads: " << threadCount  << endl;
-    //*out <<  "===============================================" << endl;
+    TraceFile << "# eof" << endl;
+    
+    TraceFile.close();
 }
 
-/*!
- * The main procedure of the tool.
- * This function is called when the application image is loaded but not yet started.
- * @param[in]   argc            total number of elements in the argv array
- * @param[in]   argv            array of command line arguments, 
- *                              including pin -t <toolname> -- ...
- */
-int main(int argc, char *argv[])
+/* ===================================================================== */
+/* Main                                                                  */
+/* ===================================================================== */
+
+int  main(int argc, char *argv[])
 {
-    // Initialize PIN library. Print help message if -h(elp) is specified
-    // in the command line or the command line is invalid 
+    
+    PIN_InitSymbols();
+
     if( PIN_Init(argc,argv) )
     {
         return Usage();
     }
     
-    string fileName = KnobOutputFile.Value();
 
-    if (!fileName.empty()) { out = new std::ofstream(fileName.c_str());}
+    TraceFile.open(KnobOutputFile.Value().c_str());
 
-    if (KnobCount)
-    {
-        // Register function to be called to instrument traces
-        TRACE_AddInstrumentFunction(Trace, 0);
-
-        // Register function to be called for every thread before it starts running
-        PIN_AddThreadStartFunction(ThreadStart, 0);
-
-        // Register function to be called when the application exits
-        PIN_AddFiniFunction(Fini, 0);
-    }
+    TraceFile << hex;
+    TraceFile.setf(ios::showbase);
     
-    // cerr <<  "===============================================" << endl;
-    cerr <<  "This application is instrumented by MyPinTool" << endl;
-    if (!KnobOutputFile.Value().empty()) 
-    {
-        cerr << "See file " << KnobOutputFile.Value() << " for analysis results" << endl;
-    }
-    // cerr <<  "===============================================" << endl;
+    string trace_header = string("#\n"
+                                 "# Call Trace Generated By Pin\n"
+                                 "#\n");
+    
 
-    // Start the program, never returns
+    TraceFile.write(trace_header.c_str(),trace_header.size());
+    
+    TRACE_AddInstrumentFunction(Trace, 0);
+    PIN_AddFiniFunction(Fini, 0);
+
+    // Never returns
+
     PIN_StartProgram();
     
     return 0;

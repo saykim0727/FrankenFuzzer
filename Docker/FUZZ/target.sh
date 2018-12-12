@@ -1,5 +1,5 @@
 #!/bin/bash
-RANDOM=$(python -c 'import uuid; print uuid.uuid4()')
+RAND=$(python -c 'import uuid; print uuid.uuid4()')
 target="/FUZZ/afl_test_t_false"
 FILENAME="/FUZZ/pin/result"
 FUZZFILE="/tmp/fuzzer"
@@ -36,12 +36,12 @@ while read line
 do
     if [ $COUNT -eq 0 ]; then
         if [ $line -gt $INS_COUNT ] && [ $INS_COUNT -ne 0 ]; then
-            echo $@ > /FUZZ/share/seed/$RANDOM
+            echo $@ > /FUZZ/share/seed/$RAND
         fi
         COUNT=1
     else
         if [ $line -gt $BB_COUNT ] && [ $BB_COUNT -ne 0 ]; then
-            echo $@ > /FUZZ/share/seed/$RANDOM
+            echo $@ > /FUZZ/share/seed/$RAND
         fi
         COUNT=0
     fi

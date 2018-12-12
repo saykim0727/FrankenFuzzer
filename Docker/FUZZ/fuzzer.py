@@ -66,13 +66,14 @@ class RADAMSA:
         os.system("echo /TEMP/core.radamsa.%e.%p.%s > /proc/sys/kernel/core_pattern")
         file_list = os.listdir(indir)
         seed_name = "radamsa." + str(time.time())
-        cmd = "cat %s | %s -o %s" % (indir+"/"+file_list[0], self.path,"/FUZZ/mod/"+seed_name)
+        cmd = "cat %s | %s -o %s" % (indir+"/"+file_list[0], self.path,"/tmp/testcase")
         radamsa_proc = subprocess.Popen(cmd,shell=True)
         radamsa_proc.wait()
+         
         if _type=="False":
-            cmd = "%s < %s" %(target, "/FUZZ/mod/"+seed_name)
+            cmd = "%s < %s" %(target, "/tmp/testcase")
         else:
-            cmd = "%s %s" %(target, "/FUZZ/mod/"+seed_name)
+            cmd = "%s %s" %(target, "/tmp/testcase")
         radamsa_proc = subprocess.Popen(cmd,shell=True)
         radamsa_proc.wait()
         

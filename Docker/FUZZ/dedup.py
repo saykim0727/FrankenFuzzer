@@ -26,14 +26,18 @@ for fileName in dirList :
                 break
             p.sendline("\r\n")
         p.kill()
-
         callStackList = callStack.split("#")[1:]
         line0 = callStackList[0]
         nbOfLines = len(callStackList)
-        print(line0)
+        for i in callStackList:
+            if "(gdb)" in i:
+                print(i.split("\n")[0])
+            else:
+                print(i)
         newCrash = True
         for crash in crashList:
             if crash[1] == line0 and crash[2] == nbOfLines:
+                print "[*]This crash is duplication"
                 os.remove(coreDump)
                 newCrash = False
                 break

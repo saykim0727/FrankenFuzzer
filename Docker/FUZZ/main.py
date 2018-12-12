@@ -21,7 +21,7 @@ class Main:
 
     def run(self):
         for i in self.fuzz_list: 
-            if i == "honggfuzz" or i == "hodor" or i=="afl-fuzz":
+            if i == "afl-fuzz" or i=="radamsa":
                 continue
             docker = Docker()
             docker.runDocker(self.args,i)

@@ -10,7 +10,7 @@ class CoreMonitor(): #for crash monitor
             randomString = uuid.uuid4()
             move("/TEMP/%s" % (filename),"/FUZZ/share/core_file/%s" %(filename))
             shutil.copyfile(seed,"/FUZZ/share/core/"+fuzzer+"/"+fuzzer+"-"+str(randomString))
-            shutil.copyfile(seed,"/FUZZ/share/seed/"+fuzzer+"-"+str(randomString))
+#            shutil.copyfile(seed,"/FUZZ/share/seed/"+fuzzer+"-"+str(randomString))
 
 if __name__ == "__main__":
     fuzzer = ""

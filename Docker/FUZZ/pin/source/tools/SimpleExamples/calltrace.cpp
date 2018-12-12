@@ -97,6 +97,7 @@ VOID  do_call_args_indirect(ADDRINT target, BOOL taken, ADDRINT arg0)
 
 VOID  do_call(const string *s)
 {
+    cout << *s << endl;
     TraceFile << *s << endl;
 }
 

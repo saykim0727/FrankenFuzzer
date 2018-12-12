@@ -6873,22 +6873,6 @@ EXP_ST void check_binary(u8* fname) {
 
   close(fd);
 
-  if (f_data[0] == '#' && f_data[1] == '!') {
-
-    SAYF("\n" cLRD "[-] " cRST
-         "Oops, the target binary looks like a shell script. Some build systems will\n"
-         "    sometimes generate shell stubs for dynamically linked programs; try static\n"
-         "    library mode (./configure --disable-shared) if that's the case.\n\n"
-
-         "    Another possible cause is that you are actually trying to use a shell\n" 
-         "    wrapper around the fuzzed component. Invoking shell can slow down the\n" 
-         "    fuzzing process by a factor of 20x or more; it's best to write the wrapper\n"
-         "    in a compiled language instead.\n");
-
-    FATAL("Program '%s' is a shell script", target_path);
-
-  }
-
 #ifndef __APPLE__
 
   if (f_data[0] != 0x7f || memcmp(f_data + 1, "ELF", 3))
