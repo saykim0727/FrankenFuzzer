@@ -89,7 +89,7 @@ class HONGGFUZZ:
         else:
             cmd = "%s -n1 -u -f %s -W %s -- %s ___FILE___" % (self.path,indir,outdir,target)
         hong_proc = subprocess.Popen(cmd,shell=True)    
-        os.system("rm /FUZZ/share/seed/00000000000000000000000000000000.00000001.honggfuzz.cov")
+        #os.system("rm /FUZZ/share/seed/00000000000000000000000000000000.00000001.honggfuzz.cov")
         hong_proc.wait()
 
 if  __name__== "__main__":
