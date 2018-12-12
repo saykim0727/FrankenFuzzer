@@ -1,4 +1,7 @@
 #!/bin/bash
+#save basic block path with using pintool
+#save crash number
+
 RANDOM=$(python -c 'import uuid; print uuid.uuid4()')
 target="/FUZZ/afl_test_t_false"
 FILENAME="/FUZZ/pin/result"
